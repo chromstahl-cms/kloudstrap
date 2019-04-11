@@ -25,7 +25,15 @@ for filename in plugins/*.tar.gz; do
 done
 
 function writeDockerFile {
-    echo "ADD $1 frontend/$1" >> Dockerfile
+    echo "ADD $1 $1" >> Dockerfile
+}
+
+function addToDockerFile {
+    echo "ADD $1 $2" >> Dockerfile
+}
+
+function runInDocker {
+    echo "RUN $1" >> Dockerfile
 }
 
 function prepDocker {
@@ -41,12 +49,25 @@ RUN wget https://download.java.net/java/GA/jdk12/GPL/openjdk-12_linux-x64_bin.ta
 ENV PATH="\$PATH:/opt/jvm/jdk-12/bin"
 
 RUN git clone https://github.com/kloud-ms/frontend.git
+RUN git clone https://github.com/kloud-ms/kms-core.git
 EOF
 }
 
 if $CHANGED; then
+    GRADLE=$(curl https://raw.githubusercontent.com/kloud-ms/kms-core/master/build.gradle 2>/dev/null | sed \$d)
+    #PACKAGE_JSON=$(curl https://raw.githubusercontent.com/kloud-ms/frontend/master/package.json 2>/dev/null)
     prepDocker
     while read path; do
         writeDockerFile $path
+        GRADLE="$GRADLE
+        compile files('$path/plugin.jar')"
+        #PACKAGE_JSON=$(echo "$PACKAGE_JSON"  | sed -e '/"dependencies":/a\' -e "        \"$path\": \"$path/frontend.tgz\",")
+        runInDocker "cd frontend &&  npm install /$path/frontend.tgz"
     done <.fdn
+    GRADLE="$GRADLE
+}"
+    #echo "$PACKAGE_JSON" > package.json
+    echo "$GRADLE" > build.gradle
+    addToDockerFile build.gradle kms-core/build.gradle
+    #addToDockerFile package.json frontend/package.json
 fi
