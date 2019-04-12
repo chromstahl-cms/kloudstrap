@@ -55,19 +55,20 @@ EOF
 
 if $CHANGED; then
     GRADLE=$(curl https://raw.githubusercontent.com/kloud-ms/kms-core/master/build.gradle 2>/dev/null | sed \$d)
-    #PACKAGE_JSON=$(curl https://raw.githubusercontent.com/kloud-ms/frontend/master/package.json 2>/dev/null)
+    curl https://raw.githubusercontent.com/kloud-ms/frontend/master/src/index.ts 1> index.ts
     prepDocker
     while read path; do
         writeDockerFile $path
         GRADLE="$GRADLE
         compile files('$path/plugin.jar')"
-        #PACKAGE_JSON=$(echo "$PACKAGE_JSON"  | sed -e '/"dependencies":/a\' -e "        \"$path\": \"$path/frontend.tgz\",")
         runInDocker "cd frontend &&  npm install /$path/frontend.tgz"
+        PACKAGE_NAME=$(tar -xOzf $path/frontend.tgz package/package.json | jq -r '.name')
+        NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+        sed -i -e '/$$MARK/a\' -e "import $NEW_UUID from '$PACKAGE_NAME'; pluginMaps.push($NEW_UUID.register());" index.ts
     done <.fdn
     GRADLE="$GRADLE
 }"
-    #echo "$PACKAGE_JSON" > package.json
     echo "$GRADLE" > build.gradle
     addToDockerFile build.gradle kms-core/build.gradle
-    #addToDockerFile package.json frontend/package.json
+    addToDockerFile index.ts frontend/index.ts
 fi

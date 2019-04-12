@@ -1,3 +1,5 @@
 extracted_plugins/
 .fdn
 Dockerfile
+build.gradle
+index.ts
