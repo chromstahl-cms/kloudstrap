@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if ! [ -x "$(command -v jq)" ]; then
+    echo 'Error: "jq" is not installed.' >&2
+    echo 'Please install it and try again.' >&2
+    exit 1
+fi
+
 rm -f .fdn
 
 PLUGIN_DIR="extracted_plugins"
