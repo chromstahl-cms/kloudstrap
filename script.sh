@@ -54,8 +54,8 @@ RUN wget https://download.java.net/java/GA/jdk12/GPL/openjdk-12_linux-x64_bin.ta
  rm -f /tmp/openjdk-11+28_linux-x64_bin.tar.gz
 ENV PATH="\$PATH:/opt/jvm/jdk-12/bin"
 
-RUN git clone https://github.com/kloud-ms/frontend.git
-RUN git clone https://github.com/kloud-ms/kms-core.git
+RUN git clone https://github.com/chromstahl-cms/frontend.git
+RUN git clone https://github.com/chromstahl-cms/chromstahl-core.git
 EOF
 }
 
@@ -69,12 +69,13 @@ if $CHANGED; then
         compile files('$path/plugin.jar')"
         runInDocker "cd frontend &&  npm install /$path/frontend.tgz"
         PACKAGE_NAME=$(tar -xOzf $path/frontend.tgz package/package.json | jq -r '.name')
-        NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
-        sed -i -e '/$$MARK/a\' -e "import $NEW_UUID from '$PACKAGE_NAME'; pluginMaps.push($NEW_UUID.register());" index.ts
+        NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z' | fold -w 32 | head -n 1)
+        sed -i -e '/$$MARK/a\' -e "import $NEW_UUID from '$PACKAGE_NAME'; pluginMaps.push(new $NEW_UUID().register());" index.ts
     done <.fdn
     GRADLE="$GRADLE
 }"
     echo "$GRADLE" > build.gradle
-    addToDockerFile build.gradle kms-core/build.gradle
-    addToDockerFile index.ts frontend/index.ts
+    runInDocker "cd frontend &&  npm i -g parcel"
+    addToDockerFile build.gradle chromstahl-core/build.gradle
+    addToDockerFile index.ts frontend/src/index.ts
 fi
