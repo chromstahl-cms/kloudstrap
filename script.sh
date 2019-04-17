@@ -61,12 +61,12 @@ EOF
 
 if $CHANGED; then
     GRADLE=$(curl https://raw.githubusercontent.com/kloud-ms/kms-core/master/build.gradle 2>/dev/null | sed \$d)
-    curl https://raw.githubusercontent.com/kloud-ms/frontend/master/src/index.ts 1> index.ts
+    curl https://raw.githubusercontent.com/kloud-ms/frontend/master/src/index.ts 2>/dev/null 1> index.ts
     prepDocker
     while read path; do
         writeDockerFile $path
         GRADLE="$GRADLE
-        compile files('$path/plugin.jar')"
+        compile files('/$path/plugin.jar')"
         runInDocker "cd frontend &&  npm install /$path/frontend.tgz"
         PACKAGE_NAME=$(tar -xOzf $path/frontend.tgz package/package.json | jq -r '.name')
         NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z' | fold -w 32 | head -n 1)
@@ -78,4 +78,5 @@ if $CHANGED; then
     runInDocker "cd frontend &&  npm i -g parcel"
     addToDockerFile build.gradle chromstahl-core/build.gradle
     addToDockerFile index.ts frontend/src/index.ts
+    echo "ENTRYPOINT sh -c 'cd chromstahl-core && ./gradlew bootRun'" >> Dockerfile
 fi
