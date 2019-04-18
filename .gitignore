@@ -3,3 +3,4 @@ extracted_plugins/
 Dockerfile
 build.gradle
 index.ts
+nginx.conf

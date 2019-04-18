@@ -42,12 +42,84 @@ function runInDocker {
     echo "RUN $1" >> Dockerfile
 }
 
+function nginxConf {
+    cat << EOF >> nginx.conf
+events {
+    worker_connections  4096;  ## Default: 1024
+}
+
+http {
+    server {
+        listen 80;
+        listen [::]:80;
+
+        server_name api.localhost;
+
+        location / {
+            proxy_pass http://127.0.0.1:8083;
+        }
+    }
+
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        root /usr/share/nginx/html/;
+
+        index index.html;
+
+        server_name _;
+
+        location ~* \.(?:ico|gif|jpe?g|png|svg)$ {
+            include /etc/nginx/mime.types;
+            expires max;
+            add_header Pragma public;
+            add_header Cache-Control "public, must-revalidate, proxy-revalidate";
+        }
+
+        location / {
+            proxy_set_header Host \$http_host\$uri;
+            try_files \$uri \$uri/ /index.html =404;
+        }
+
+    }
+}
+EOF
+}
+
+function dockerCompose {
+    cat << EOF >> docker-compose.yml
+version: "3"
+
+services:
+  core:
+    build: $PWD
+    image: core
+    environment:
+      SPRING_APPLICATION_JSON: '{"spring.datasource": {"url": "jdbc:mysql://db:3306/kms?useSSL=false", "password": "kloudfile"}}'
+    ports:
+      - 8083:8083
+  db:
+    environment:
+      MYSQL_ROOT_PASSWORD: kloudfile
+      MYSQL_DATABASE: kms
+    image: mysql:5.7
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql/lib:/var/lib/mysql
+      - ./mysql/cnf:/etc/mysql/conf.d
+      - ./mysql/log:/var/log/mysql
+EOF
+}
+
 function prepDocker {
     rm -f Dockerfile
     cat << EOF >> Dockerfile
 FROM voidlinux/voidlinux
 # Install java
-RUN xbps-install -Syu wget nodejs git
+RUN xbps-install -Syu wget nodejs git nginx
+RUN npm i -g parcel
 RUN wget https://download.java.net/java/GA/jdk12/GPL/openjdk-12_linux-x64_bin.tar.gz -O /tmp/jdk.tar.gz && \
  mkdir -p /opt/jvm && \
  tar xfvz /tmp/jdk.tar.gz --directory /opt/jvm && \
@@ -75,8 +147,11 @@ if $CHANGED; then
     GRADLE="$GRADLE
 }"
     echo "$GRADLE" > build.gradle
-    runInDocker "cd frontend &&  npm i -g parcel"
+    addToDockerFile nginx.conf /etc/nginx/nginx.conf
     addToDockerFile build.gradle chromstahl-core/build.gradle
     addToDockerFile index.ts frontend/src/index.ts
+    runInDocker "cd frontend && parcel build src/index.html && rm -rf /usr/share/nginx/html/* && cp dist/* /usr/share/nginx/html"
+    nginxConf
+    dockerCompose
     echo "ENTRYPOINT sh -c 'cd chromstahl-core && ./gradlew bootRun'" >> Dockerfile
 fi

@@ -2,7 +2,7 @@ version: "3"
 
 services:
   core:
-    build: $PWD
+    build: /home/lars/code/klms/kloudstrapbash
     image: core
     environment:
       SPRING_APPLICATION_JSON: '{"spring.datasource": {"url": "jdbc:mysql://db:3306/kms?useSSL=false", "password": "kloudfile"}}'
@@ -19,17 +19,3 @@ services:
       - ./mysql/lib:/var/lib/mysql
       - ./mysql/cnf:/etc/mysql/conf.d
       - ./mysql/log:/var/log/mysql
-  silver:
-    image: registry.kloud.software/silver-fork:latest
-    environment:
-      SPRING_APPLICATION_JSON: '{"spring.datasource": {"url": "jdbc:mysql://db:3306/kms?useSSL=false", "password": "kloudfile"},
-            "redis": {"host": "redis", "port": 6379}, "silver.key": "test12345"}'
-    ports:
-      - 8080:8080
-    links:
-      - db:db
-      - redis:redis
-  redis:
-    image: redis:latest
-    ports:
-    - 6380:6379
