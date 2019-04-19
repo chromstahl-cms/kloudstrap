@@ -99,6 +99,7 @@ services:
       SPRING_APPLICATION_JSON: '{"spring.datasource": {"url": "jdbc:mysql://db:3306/kms?useSSL=false", "password": "kloudfile"}}'
     ports:
       - 8083:8083
+      - 4444:80
   db:
     environment:
       MYSQL_ROOT_PASSWORD: kloudfile
@@ -153,5 +154,5 @@ if $CHANGED; then
     runInDocker "cd frontend && parcel build src/index.html && rm -rf /usr/share/nginx/html/* && cp dist/* /usr/share/nginx/html"
     nginxConf
     dockerCompose
-    echo "ENTRYPOINT sh -c 'cd chromstahl-core && ./gradlew bootRun'" >> Dockerfile
+    echo "ENTRYPOINT sh -c 'nginx && cd chromstahl-core && ./gradlew bootRun'" >> Dockerfile
 fi
