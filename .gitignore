@@ -4,3 +4,5 @@ Dockerfile
 build.gradle
 index.ts
 nginx.conf
+docker-compose.yml
+mysql/
