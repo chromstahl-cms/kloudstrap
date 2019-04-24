@@ -108,10 +108,12 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - ./mysql/lib:/var/lib/mysql
-      - ./mysql/cnf:/etc/mysql/conf.d
-      - ./mysql/log:/var/log/mysql
 EOF
+    DATA_DIR="$HOME/.chromstahl/db"
+    mkdir -p $DATA_DIR
+    echo "      - $DATA_DIR/lib:/var/lib/mysql" >> docker-compose.yml
+    echo "      - $DATA_DIR/cnf:/var/cnf/mysql" >> docker-compose.yml
+    echo "      - $DATA_DIR/log:/var/log/mysql" >> docker-compose.yml
 }
 
 function prepDocker {
