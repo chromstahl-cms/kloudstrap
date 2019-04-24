@@ -127,6 +127,7 @@ RUN wget https://download.java.net/java/GA/jdk12/GPL/openjdk-12_linux-x64_bin.ta
  rm -f /tmp/openjdk-11+28_linux-x64_bin.tar.gz
 ENV PATH="\$PATH:/opt/jvm/jdk-12/bin"
 
+RUN date +%s > .date
 RUN git clone https://github.com/chromstahl-cms/frontend.git
 RUN git clone https://github.com/chromstahl-cms/chromstahl-core.git
 EOF
