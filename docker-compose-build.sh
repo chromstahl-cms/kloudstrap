@@ -1,0 +1,1 @@
+docker-compose build --build-arg FRONTEND_SHA=$(git ls-remote https://github.com/chromstahl-cms/frontend.git | head -n 1 | awk '{print $1}') --build-arg BACKEND_SHA=$(git ls-remote https://github.com/chromstahl-cms/chromstahl-core.git | head -n 1 | awk '{print $1}')  core
