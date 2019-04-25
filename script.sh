@@ -88,6 +88,8 @@ EOF
 }
 
 function dockerCompose {
+    DATA_BASE_DIR="$HOME/.chromstahl"
+    mkdir -p $DATA_BASE_DIR
     cat << EOF >> docker-compose.yml
 version: "3"
 
@@ -100,6 +102,11 @@ services:
     ports:
       - 8083:8083
       - 4444:80
+    volumes:
+EOF
+    DATA_DIR="$DATA_BASE_DIR/data"
+    echo "      - $DATA_DIR:/root/.chromstahl/data" >> docker-compose.yml
+    cat << EOF >> docker-compose.yml
   db:
     environment:
       MYSQL_ROOT_PASSWORD: kloudfile
@@ -109,11 +116,10 @@ services:
       - 3306:3306
     volumes:
 EOF
-    DATA_DIR="$HOME/.chromstahl/db"
-    mkdir -p $DATA_DIR
-    echo "      - $DATA_DIR/lib:/var/lib/mysql" >> docker-compose.yml
-    echo "      - $DATA_DIR/cnf:/var/cnf/mysql" >> docker-compose.yml
-    echo "      - $DATA_DIR/log:/var/log/mysql" >> docker-compose.yml
+    DB_DIR="$DATA_BASE_DIR/db"
+    echo "      - $DB_DIR/lib:/var/lib/mysql" >> docker-compose.yml
+    echo "      - $DB_DIR/cnf:/var/cnf/mysql" >> docker-compose.yml
+    echo "      - $DB_DIR/log:/var/log/mysql" >> docker-compose.yml
 }
 
 function prepDocker {
