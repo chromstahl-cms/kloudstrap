@@ -5,3 +5,4 @@ rm -f build.gradle
 rm -f index.ts
 rm -f nginx.conf
 rm -f docker-compose.yml
+rm -f package.json
