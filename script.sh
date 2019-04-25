@@ -168,7 +168,7 @@ if $CHANGED; then
     addToDockerFile nginx.conf /etc/nginx/nginx.conf
     addToDockerFile build.gradle chromstahl-core/build.gradle
     addToDockerFile index.ts frontend/src/index.ts
-    runInDocker "cd frontend && parcel build src/index.html && rm -rf /usr/share/nginx/html/* && cp dist/* /usr/share/nginx/html"
+    runInDocker "cd frontend && npm i && parcel build src/index.html && rm -rf /usr/share/nginx/html/* && cp dist/* /usr/share/nginx/html"
     nginxConf
     dockerCompose
     echo "ENTRYPOINT sh -c 'nginx && cd chromstahl-core && ./gradlew bootRun'" >> Dockerfile
