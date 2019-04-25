@@ -122,6 +122,9 @@ function prepDocker {
 FROM voidlinux/voidlinux
 # Install java
 RUN xbps-install -Syu wget nodejs git nginx
+RUN xbps-install -y gradle && mkdir gradle && cd gradle && gradle wrapper --gradle-distribution-url https\://services.gradle.org/distributions/gradle-5.2.1-all.zip && ./gradlew build && xbps-remove -Ry gradle && cd ../ && rm -rf gradle/
+ADD package.json /tmp/package.json
+RUN cd /tmp && npm install
 RUN npm i -g parcel
 RUN wget https://download.java.net/java/GA/jdk12/GPL/openjdk-12_linux-x64_bin.tar.gz -O /tmp/jdk.tar.gz && \
  mkdir -p /opt/jvm && \
@@ -132,15 +135,17 @@ ENV PATH="\$PATH:/opt/jvm/jdk-12/bin"
 ARG FRONTEND_SHA
 RUN echo $FRONTEND_SHA
 RUN git clone https://github.com/chromstahl-cms/frontend.git
+RUN cd frontend && cp -r /tmp/node_modules .
 ARG BACKEND_SHA
 RUN echo $BACKEND_SHA
-RUN git clone https://github.com/chromstahl-cms/chromstahl-core.git
+RUN git clone https://github.com/chromstahl-cms/chromstahl-core.git && cd chromstahl-core && ./gradlew build -x test
 EOF
 }
 
 if $CHANGED; then
     GRADLE=$(curl https://raw.githubusercontent.com/kloud-ms/kms-core/master/build.gradle 2>/dev/null | sed \$d)
     curl https://raw.githubusercontent.com/kloud-ms/frontend/master/src/index.ts 2>/dev/null 1> index.ts
+    curl https://raw.githubusercontent.com/chromstahl-cms/frontend/master/package.json 2>/dev/null 1> package.json
     prepDocker
     while read path; do
         writeDockerFile $path
