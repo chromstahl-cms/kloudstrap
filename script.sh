@@ -123,14 +123,14 @@ FROM voidlinux/voidlinux
 # Install java
 RUN xbps-install -Syu wget nodejs git nginx
 RUN xbps-install -y gradle && mkdir gradle && cd gradle && gradle wrapper --gradle-distribution-url https\://services.gradle.org/distributions/gradle-5.2.1-all.zip && ./gradlew build && xbps-remove -Ry gradle && cd ../ && rm -rf gradle/
-ADD package.json /tmp/package.json
-RUN cd /tmp && npm install
 RUN npm i -g parcel
 RUN wget https://download.java.net/java/GA/jdk12/GPL/openjdk-12_linux-x64_bin.tar.gz -O /tmp/jdk.tar.gz && \
  mkdir -p /opt/jvm && \
  tar xfvz /tmp/jdk.tar.gz --directory /opt/jvm && \
  rm -f /tmp/openjdk-11+28_linux-x64_bin.tar.gz
 ENV PATH="\$PATH:/opt/jvm/jdk-12/bin"
+ADD package.json /tmp/package.json
+RUN cd /tmp && npm install
 
 ARG FRONTEND_SHA
 RUN echo $FRONTEND_SHA
