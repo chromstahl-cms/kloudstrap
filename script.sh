@@ -136,7 +136,8 @@ RUN wget https://download.java.net/java/GA/jdk12/GPL/openjdk-12_linux-x64_bin.ta
  rm -f /tmp/openjdk-11+28_linux-x64_bin.tar.gz
 ENV PATH="\$PATH:/opt/jvm/jdk-12/bin"
 ADD package.json /tmp/package.json
-RUN cd /tmp && npm install
+
+RUN cd /tmp && sed -e '/cypress/d' -i package.json && npm install
 
 ARG FRONTEND_SHA
 RUN echo $FRONTEND_SHA
@@ -157,7 +158,7 @@ if $CHANGED; then
         writeDockerFile $path
         GRADLE="$GRADLE
         compile files('/$path/plugin.jar')"
-        runInDocker "cd frontend &&  npm install /$path/frontend.tgz"
+        runInDocker "cd frontend && sed -e '/cypress/d' -i package.json &&  npm install /$path/frontend.tgz"
         PACKAGE_NAME=$(tar -xOzf $path/frontend.tgz package/package.json | jq -r '.name')
         NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z' | fold -w 32 | head -n 1)
         sed -i -e '/$$MARK/a\' -e "import $NEW_UUID from '$PACKAGE_NAME'; pluginMaps.push(new $NEW_UUID().register());" index.ts
